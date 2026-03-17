@@ -10,8 +10,16 @@ import os
 # ========================
 st.set_page_config(page_title="Gia sư Vật lí AI PRO", layout="wide")
 
-# API KEY (Deploy dùng biến môi trường)
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# ========================
+# API KEY SAFE LOAD
+# ========================
+api_key = os.getenv("OPENAI_API_KEY")
+
+if not api_key:
+    st.error("⚠️ Chưa thiết lập OPENAI_API_KEY")
+    st.stop()
+
+client = OpenAI(api_key=api_key)
 
 # ========================
 # STYLE
@@ -33,23 +41,36 @@ st.title("🔬 Gia sư Vật lí AI PRO")
 st.write("Hệ thống học tập Vật lí thông minh dành cho học sinh THPT")
 
 # ========================
-# MEMORY (LỊCH SỬ)
+# MEMORY
 # ========================
 if "history" not in st.session_state:
     st.session_state.history = []
 
 # ========================
+# SAFE CALL FUNCTION
+# ========================
+def ask_ai(messages):
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"❌ Lỗi API: {str(e)}"
+
+# ========================
 # TABS
 # ========================
 tabs = st.tabs([
-"🤖 Hỏi đáp",
-"🧠 Giải bài",
-"📝 Trắc nghiệm",
-"📊 Thí nghiệm",
-"🧪 Mô phỏng",
-"📝 Chấm bài",
-"📚 Công thức",
-"📜 Lịch sử"
+    "🤖 Hỏi đáp",
+    "🧠 Giải bài",
+    "📝 Trắc nghiệm",
+    "📊 Thí nghiệm",
+    "🧪 Mô phỏng",
+    "📝 Chấm bài",
+    "📚 Công thức",
+    "📜 Lịch sử"
 ])
 
 # ========================
@@ -59,20 +80,18 @@ with tabs[0]:
     question = st.text_area("Nhập câu hỏi")
 
     if st.button("AI trả lời"):
-        st.session_state.history.append(question)
+        if question:
+            st.session_state.history.append(question)
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
+            answer = ask_ai([
                 {"role": "system","content": "Bạn là gia sư vật lí THPT, giải thích dễ hiểu, có ví dụ."},
                 {"role": "user","content": question}
-            ]
-        )
+            ])
 
-        st.write(response.choices[0].message.content)
+            st.write(answer)
 
 # ========================
-# TAB 2: GIẢI BÀI (THÔNG MINH)
+# TAB 2: GIẢI BÀI
 # ========================
 with tabs[1]:
     problem = st.text_area("Nhập bài tập")
@@ -90,18 +109,15 @@ with tabs[1]:
     if col3.button("✅ Giải đầy đủ"):
         prompt = f"Giải bài vật lí từng bước chi tiết: {problem}"
 
-    if prompt:
+    if prompt and problem:
         st.session_state.history.append(problem)
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role":"system","content":"Bạn là gia sư vật lí, hướng dẫn học sinh tư duy."},
-                {"role":"user","content":prompt}
-            ]
-        )
+        answer = ask_ai([
+            {"role":"system","content":"Bạn là gia sư vật lí, hướng dẫn học sinh tư duy."},
+            {"role":"user","content":prompt}
+        ])
 
-        st.write(response.choices[0].message.content)
+        st.write(answer)
 
 # ========================
 # TAB 3: TRẮC NGHIỆM
@@ -111,21 +127,21 @@ with tabs[2]:
     number = st.slider("Số câu",1,10,5)
 
     if st.button("Tạo câu hỏi"):
-        prompt = f"""
-        Tạo {number} câu trắc nghiệm vật lí về {topic}.
-        Có 4 đáp án A B C D.
-        Ghi rõ đáp án đúng.
-        """
+        if topic:
+            prompt = f"""
+            Tạo {number} câu trắc nghiệm vật lí về {topic}.
+            Có 4 đáp án A B C D.
+            Ghi rõ đáp án đúng.
+            """
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role":"user","content":prompt}]
-        )
+            answer = ask_ai([
+                {"role":"user","content":prompt}
+            ])
 
-        st.write(response.choices[0].message.content)
+            st.write(answer)
 
 # ========================
-# TAB 4: PHÂN TÍCH THÍ NGHIỆM
+# TAB 4: THÍ NGHIỆM
 # ========================
 with tabs[3]:
     x_input = st.text_input("Nhập X (cách nhau bởi dấu cách)")
@@ -147,7 +163,6 @@ with tabs[3]:
             st.write("R:", round(r,3))
             st.latex(f"y={slope:.2f}x+{intercept:.2f}")
 
-            # AI giải thích
             if st.button("Giải thích kết quả"):
                 prompt = f"""
                 Phương trình: y = {slope:.2f}x + {intercept:.2f}
@@ -155,12 +170,11 @@ with tabs[3]:
                 Hãy giải thích ý nghĩa vật lí.
                 """
 
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[{"role":"user","content":prompt}]
-                )
+                answer = ask_ai([
+                    {"role":"user","content":prompt}
+                ])
 
-                st.write(response.choices[0].message.content)
+                st.write(answer)
 
         except:
             st.error("Dữ liệu không hợp lệ!")
@@ -186,23 +200,23 @@ with tabs[5]:
     correct_answer = st.text_area("Đáp án đúng")
 
     if st.button("Chấm bài"):
-        prompt = f"""
-        So sánh bài làm và đáp án:
+        if student_answer and correct_answer:
+            prompt = f"""
+            So sánh bài làm và đáp án:
 
-        Bài học sinh: {student_answer}
-        Đáp án: {correct_answer}
+            Bài học sinh: {student_answer}
+            Đáp án: {correct_answer}
 
-        1. Chấm điểm /10
-        2. Chỉ ra lỗi sai
-        3. Gợi ý cải thiện
-        """
+            1. Chấm điểm /10
+            2. Chỉ ra lỗi sai
+            3. Gợi ý cải thiện
+            """
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role":"user","content":prompt}]
-        )
+            answer = ask_ai([
+                {"role":"user","content":prompt}
+            ])
 
-        st.write(response.choices[0].message.content)
+            st.write(answer)
 
 # ========================
 # TAB 7: CÔNG THỨC
