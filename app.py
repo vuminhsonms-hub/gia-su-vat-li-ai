@@ -109,12 +109,12 @@ with tabs[0]:
     {"role":"user","content":prompt}
 ])
 
-            def fix_latex(text):
-                text = text.replace("[", "$").replace("]", "$")
-                return text
+def fix_latex(text):
+    text = text.replace("[", "$").replace("]", "$")
+    return text
 
             
-           st.markdown(fix_latex(answer))
+st.markdown(fix_latex(answer))
 
 # ========================
 # TAB 2: GIẢI BÀI
