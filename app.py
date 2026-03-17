@@ -68,9 +68,20 @@ def ask_ai(messages):
 # LATEX RENDER FIX
 # ========================
 def render_latex(text):
-    parts = re.split(r'(\$.*?\$)', text)
+    import re
+
+    # xử lý \(...\)
+    text = re.sub(r'\\\((.*?)\\\)', r'$\1$', text)
+
+    # xử lý \[...\]
+    text = re.sub(r'\\\[(.*?)\\\]', r'$$\1$$', text)
+
+    parts = re.split(r'(\${1,2}.*?\${1,2})', text)
+
     for part in parts:
-        if part.startswith("$") and part.endswith("$"):
+        if part.startswith("$$") and part.endswith("$$"):
+            st.latex(part.strip("$$"))
+        elif part.startswith("$") and part.endswith("$"):
             st.latex(part.strip("$"))
         else:
             st.write(part)
