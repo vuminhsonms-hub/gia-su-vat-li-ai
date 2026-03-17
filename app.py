@@ -110,7 +110,10 @@ with tabs[0]:
 ])
 
 def fix_latex(text):
+    import re
     text = text.replace("[", "$").replace("]", "$")
+    text = re.sub(r'\\\((.*?)\\\)', r'$\1$', text)
+    text = re.sub(r'\\\[(.*?)\\\]', r'$$\1$$', text)
     return text
 
             
