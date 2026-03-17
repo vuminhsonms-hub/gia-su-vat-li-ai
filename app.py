@@ -5,16 +5,13 @@ from scipy.stats import linregress
 from openai import OpenAI
 import os
 
+# ========================
+# CONFIG
+# ========================
+st.set_page_config(page_title="Gia sư Vật lí AI PRO", layout="wide")
+
+# API KEY (Deploy dùng biến môi trường)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[
-        {"role": "user", "content": prompt}
-    ]
-)
-
-print(response.choices[0].message.content)
 
 # ========================
 # STYLE
