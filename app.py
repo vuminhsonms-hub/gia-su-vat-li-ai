@@ -4,15 +4,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 from openai import OpenAI
 import os
+from openai import OpenAI
 
-# ========================
-# CONFIG
-# ========================
-st.set_page_config(page_title="Gia sư Vật lí AI PRO", layout="wide")
-
-# ========================
-# API KEY SAFE LOAD
-# ========================
 api_key = os.getenv("OPENAI_API_KEY")
 
 client = None
