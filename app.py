@@ -86,15 +86,13 @@ with tabs[0]:
     if st.button("AI trả lời", key="ask_btn"):
         if question:
             answer = ask_ai([
-                {
-                    "role": "system",
-                    "content": """
-                        Bạn là gia sư vật lí.
-                        Nếu có công thức:
-                        - Viết dạng $...$
-                        - Không dùng \( \) hoặc [ ]
-                    """
-                },
+                {"role": "system",
+                 "content": """
+                 Bạn là gia sư vật lí.
+                 Nếu có công thức:
+                 - Viết dạng $...$
+                 - Không dùng \( \) hoặc [ ]
+                 """},
                 {"role": "user", "content": question}
             ])
 
@@ -102,10 +100,11 @@ with tabs[0]:
             if "history" not in st.session_state:
                 st.session_state.history = []
 
-            # Lưu cả câu hỏi + đáp án
+            # Lưu cả câu hỏi + câu trả lời
             st.session_state.history.append({"question": question, "answer": answer})
 
             st.markdown(answer)
+
 
 # ========================
 # TAB 2: GIẢI BÀI
@@ -297,9 +296,15 @@ with tabs[7]:
     st.subheader("Lịch sử học tập")
 
     if "history" in st.session_state and st.session_state.history:
-        for i, item in enumerate(st.session_state.history):
-            # Dùng expander cho mỗi câu hỏi
-            with st.expander(item["question"], expanded=False):
-                st.markdown(item["answer"])
+        # Tạo một selectbox để chọn câu hỏi
+        selected_index = st.selectbox(
+            "Chọn câu hỏi để xem đáp án",
+            range(len(st.session_state.history)),
+            format_func=lambda i: st.session_state.history[i]["question"]
+        )
+
+        # Hiển thị đáp án tương ứng
+        st.markdown(st.session_state.history[selected_index]["answer"])
+
     else:
         st.info("Chưa có lịch sử hỏi đáp nào.")
