@@ -80,26 +80,12 @@ tabs = st.tabs([
 # ========================
 # TAB 1: HỎI ĐÁP
 # ========================
-with tabs[0]:
-    question = st.text_area("Nhập câu hỏi")
+with tabs[7]:
+    st.subheader("Lịch sử học tập")
 
-    if st.button("AI trả lời", key="ask_btn"):
-        if question:
-            answer = ask_ai([
-                {"role": "system",
-                 "content": """
-                    Bạn là gia sư vật lí.
-                    Nếu có công thức:
-                    - Viết dạng $...$
-                    - Không dùng \\( \\) hoặc [ ]
-                 """},
-                {"role": "user","content": question}
-            ])
-
-            # Lưu cả câu hỏi và câu trả lời vào lịch sử
-            st.session_state.history.append({"question": question, "answer": answer})
-
-            st.markdown(answer)
+    for i, item in enumerate(st.session_state.history):
+        if st.button(item["question"], key=f"history_{i}"):
+            st.markdown(item["answer"])
 
 # ========================
 # TAB 2: GIẢI BÀI
@@ -290,6 +276,10 @@ with tabs[6]:
 with tabs[7]:
     st.subheader("Lịch sử học tập")
 
-    for i, item in enumerate(st.session_state.history):
-        if st.button(item["question"], key=f"history_{i}"):
-            st.markdown(item["answer"])
+    if "history" in st.session_state and st.session_state.history:
+        for i, item in enumerate(st.session_state.history):
+            # Mỗi câu hỏi là một expander, click để xem câu trả lời
+            with st.expander(item["question"]):
+                st.markdown(item["answer"])
+    else:
+        st.info("Chưa có lịch sử hỏi đáp nào.")
