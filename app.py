@@ -84,7 +84,7 @@ with tabs[0]:
     question = st.text_area("Nhập câu hỏi")
 
     if st.button("AI trả lời", key="ask_btn"):
-        if question:
+        if question.strip():  # kiểm tra câu hỏi không rỗng
             answer = ask_ai([
                 {"role": "system",
                  "content": """
@@ -100,10 +100,12 @@ with tabs[0]:
             if "history" not in st.session_state:
                 st.session_state.history = []
 
-            # Lưu cả câu hỏi + câu trả lời
+            # Lưu câu hỏi + đáp án
             st.session_state.history.append({"question": question, "answer": answer})
 
+            st.markdown("**AI trả lời:**")
             st.markdown(answer)
+
 
 
 # ========================
@@ -295,16 +297,11 @@ with tabs[6]:
 with tabs[7]:
     st.subheader("Lịch sử học tập")
 
+    # Kiểm tra có history chưa
     if "history" in st.session_state and st.session_state.history:
-        # Tạo một selectbox để chọn câu hỏi
-        selected_index = st.selectbox(
-            "Chọn câu hỏi để xem đáp án",
-            range(len(st.session_state.history)),
-            format_func=lambda i: st.session_state.history[i]["question"]
-        )
-
-        # Hiển thị đáp án tương ứng
-        st.markdown(st.session_state.history[selected_index]["answer"])
-
+        # Mỗi câu hỏi là một expander, click mở ra thấy đáp án
+        for i, item in enumerate(st.session_state.history):
+            with st.expander(item["question"], expanded=False):
+                st.markdown(item["answer"])
     else:
         st.info("Chưa có lịch sử hỏi đáp nào.")
