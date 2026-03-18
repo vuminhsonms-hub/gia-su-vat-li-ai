@@ -85,20 +85,19 @@ with tabs[0]:
 
     if st.button("AI trả lời", key="ask_btn"):
         if question:
-            st.session_state.history.append(question)
-
             answer = ask_ai([
-                {
-                    "role": "system",
-                    "content": """
+                {"role": "system",
+                 "content": """
                     Bạn là gia sư vật lí.
                     Nếu có công thức:
                     - Viết dạng $...$
                     - Không dùng \\( \\) hoặc [ ]
-                    """
-                },
+                 """},
                 {"role": "user","content": question}
             ])
+
+            # Lưu cả câu hỏi và câu trả lời vào lịch sử
+            st.session_state.history.append({"question": question, "answer": answer})
 
             st.markdown(answer)
 
@@ -291,5 +290,6 @@ with tabs[6]:
 with tabs[7]:
     st.subheader("Lịch sử học tập")
 
-    for item in st.session_state.history:
-        st.write("-", item)
+    for i, item in enumerate(st.session_state.history):
+        if st.button(item["question"], key=f"history_{i}"):
+            st.markdown(item["answer"])
