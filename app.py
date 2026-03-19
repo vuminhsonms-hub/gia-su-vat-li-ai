@@ -1261,37 +1261,52 @@ with tabs[3]:
 # ========================
 # TAB 6: CHẤM BÀI NÂNG CẤP
 # ========================
-with tabs[5]:
-    st.subheader("📝 Chấm bài thông minh 1")
+with tabs[4]:
+    st.subheader("📝 Chấm bài thông minh")
 
-    col1, col2 = st.columns([1, 1])
+    # Khởi tạo vùng nhớ
+    if "grade_result_raw" not in st.session_state:
+        st.session_state.grade_result_raw = ""
+    if "grade_result_data" not in st.session_state:
+        st.session_state.grade_result_data = None
+
+    col1, col2 = st.columns(2)
 
     with col1:
         grade_type = st.selectbox(
             "Loại bài",
-            ["Tự luận lý thuyết", "Bài tập tính toán", "Báo cáo thí nghiệm"]
+            ["Tự luận lý thuyết", "Bài tập tính toán", "Báo cáo thí nghiệm"],
+            key="grade_type"
         )
 
-        max_score = st.slider("Thang điểm", 5, 100, 10)
+        max_score = st.slider(
+            "Thang điểm",
+            min_value=5,
+            max_value=100,
+            value=10,
+            key="max_score"
+        )
 
         strictness = st.selectbox(
             "Chế độ chấm",
-            ["Dễ", "Chuẩn", "Nghiêm"]
+            ["Dễ", "Chuẩn", "Nghiêm"],
+            key="strictness"
         )
 
     with col2:
         focus = st.multiselect(
             "Tiêu chí ưu tiên",
             ["Kiến thức", "Công thức", "Lập luận", "Kết quả", "Đơn vị", "Trình bày"],
-            default=["Kiến thức", "Công thức", "Kết quả", "Đơn vị"]
+            default=["Kiến thức", "Công thức", "Kết quả", "Đơn vị"],
+            key="focus"
         )
 
-    student_answer = st.text_area("Bài làm của học sinh", height=220)
-    correct_answer = st.text_area("Đáp án chuẩn / barem", height=220)
+    student_answer = st.text_area("Bài làm của học sinh", height=220, key="student_answer")
+    correct_answer = st.text_area("Đáp án chuẩn / barem", height=220, key="correct_answer")
 
     if st.button("🚀 Chấm bài ngay", key="grade_btn_pro"):
-        if student_answer and correct_answer:
-            focus_text = ", ".join(focus)
+        if student_answer.strip() and correct_answer.strip():
+            focus_text = ", ".join(focus) if focus else "Kiến thức, Công thức, Kết quả"
 
             grading_prompt = f"""
 Bạn là giáo viên Vật lí THPT, chấm bài nghiêm túc nhưng mang tính hỗ trợ học tập.
@@ -1303,22 +1318,24 @@ Tiêu chí ưu tiên: {focus_text}
 
 Hãy chấm bài và TRẢ VỀ JSON hợp lệ với cấu trúc:
 {{
-  "total_score": number,
-  "max_score": number,
+  "total_score": 0,
+  "max_score": {max_score},
   "grade": "string",
   "summary": "string",
   "criteria": [
-    {{"name":"Kiến thức","score":number,"max_score":number}},
-    {{"name":"Công thức","score":number,"max_score":number}},
-    {{"name":"Lập luận","score":number,"max_score":number}},
-    {{"name":"Kết quả","score":number,"max_score":number}},
-    {{"name":"Trình bày","score":number,"max_score":number}}
+    {{"name":"Kiến thức","score":0,"max_score":2}},
+    {{"name":"Công thức","score":0,"max_score":2}},
+    {{"name":"Lập luận","score":0,"max_score":2}},
+    {{"name":"Kết quả","score":0,"max_score":2}},
+    {{"name":"Trình bày","score":0,"max_score":2}}
   ],
   "strengths": ["string"],
   "mistakes": ["string"],
   "suggestions": ["string"],
   "model_answer": "string"
 }}
+
+Chỉ trả về JSON, không thêm giải thích ngoài JSON.
 
 Bài làm học sinh:
 {student_answer}
@@ -1328,51 +1345,107 @@ Bài làm học sinh:
 """
 
             raw_result = ask_ai([
-                {"role": "system", "content": "Bạn là giáo viên Vật lí, luôn trả về JSON hợp lệ."},
+                {"role": "system", "content": "Bạn là giáo viên Vật lí và luôn trả về JSON hợp lệ."},
                 {"role": "user", "content": grading_prompt}
             ])
+
+            st.session_state.grade_result_raw = raw_result
+            st.session_state.grade_result_data = None
 
             import json
 
             try:
-                result = json.loads(raw_result)
+                cleaned = raw_result.strip()
 
-                score = result["total_score"]
-                max_s = result["max_score"]
+                if cleaned.startswith("```json"):
+                    cleaned = cleaned.replace("```json", "", 1).strip()
+                if cleaned.startswith("```"):
+                    cleaned = cleaned.replace("```", "", 1).strip()
+                if cleaned.endswith("```"):
+                    cleaned = cleaned[:-3].strip()
 
-                c1, c2, c3 = st.columns(3)
-                c1.metric("🎯 Điểm", f"{score}/{max_s}")
-                c2.metric("🏷️ Xếp loại", result["grade"])
-                c3.metric("📈 Tỉ lệ", f"{round(score/max_s*100)}%")
-
-                st.info(result["summary"])
-
-                st.markdown("### 📊 Điểm theo tiêu chí")
-                for item in result["criteria"]:
-                    st.write(f"**{item['name']}**: {item['score']}/{item['max_score']}")
-                    st.progress(min(item["score"] / item["max_score"], 1.0))
-
-                with st.expander("✅ Điểm mạnh", expanded=True):
-                    for s in result["strengths"]:
-                        st.success(s)
-
-                with st.expander("❌ Lỗi sai cần sửa", expanded=True):
-                    for m in result["mistakes"]:
-                        st.error(m)
-
-                with st.expander("📌 Gợi ý cải thiện", expanded=True):
-                    for s in result["suggestions"]:
-                        st.warning(s)
-
-                with st.expander("🧠 Đáp án mẫu"):
-                    st.markdown(result["model_answer"])
+                result = json.loads(cleaned)
+                st.session_state.grade_result_data = result
 
             except Exception:
-                st.warning("AI chưa trả về đúng JSON, hiển thị kết quả thô bên dưới:")
-                st.markdown(raw_result)
+                st.session_state.grade_result_data = None
         else:
             st.error("Vui lòng nhập đầy đủ bài làm và đáp án.")
 
+    # Hiển thị kết quả đã lưu
+    if st.session_state.grade_result_data is not None:
+        result = st.session_state.grade_result_data
+
+        score = result.get("total_score", 0)
+        max_s = result.get("max_score", max_score)
+        grade = result.get("grade", "Chưa rõ")
+        summary = result.get("summary", "")
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("🎯 Điểm", f"{score}/{max_s}")
+        c2.metric("🏷️ Xếp loại", grade)
+
+        try:
+            percent = round(float(score) / float(max_s) * 100)
+        except:
+            percent = 0
+        c3.metric("📈 Tỉ lệ", f"{percent}%")
+
+        if summary:
+            st.info(summary)
+
+        st.markdown("### 📊 Điểm theo tiêu chí")
+        for item in result.get("criteria", []):
+            name = item.get("name", "Tiêu chí")
+            item_score = item.get("score", 0)
+            item_max = item.get("max_score", 1)
+
+            st.write(f"**{name}**: {item_score}/{item_max}")
+
+            try:
+                progress_value = float(item_score) / float(item_max)
+            except:
+                progress_value = 0
+
+            progress_value = max(0.0, min(progress_value, 1.0))
+            st.progress(progress_value)
+
+        with st.expander("✅ Điểm mạnh", expanded=True):
+            strengths = result.get("strengths", [])
+            if strengths:
+                for s in strengths:
+                    st.success(s)
+            else:
+                st.write("Chưa có dữ liệu.")
+
+        with st.expander("❌ Lỗi sai cần sửa", expanded=True):
+            mistakes = result.get("mistakes", [])
+            if mistakes:
+                for m in mistakes:
+                    st.error(m)
+            else:
+                st.write("Chưa có dữ liệu.")
+
+        with st.expander("📌 Gợi ý cải thiện", expanded=True):
+            suggestions = result.get("suggestions", [])
+            if suggestions:
+                for s in suggestions:
+                    st.warning(s)
+            else:
+                st.write("Chưa có dữ liệu.")
+
+        with st.expander("🧠 Đáp án mẫu"):
+            model_answer = result.get("model_answer", "")
+            if model_answer:
+                st.markdown(model_answer)
+            else:
+                st.write("Chưa có dữ liệu.")
+
+    elif st.session_state.grade_result_raw:
+        st.warning("AI đã trả kết quả nhưng chưa đúng JSON. Hiển thị kết quả thô:")
+        st.markdown(st.session_state.grade_result_raw)
+    else:
+        st.caption("Nhập bài làm, đáp án rồi bấm “Chấm bài ngay” để xem kết quả.")
 # ========================
 # TAB 6: CÔNG THỨC
 # ========================
