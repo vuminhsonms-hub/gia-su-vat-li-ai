@@ -151,228 +151,83 @@ with tabs[1]:
         st.markdown(clean_answer)
 
 # ========================
-# TAB 3: TRẮC NGHIỆM (GIAO DIỆN ĐẸP)
+# TAB 3: TRẮC NGHIỆM (ỔN ĐỊNH)
 # ========================
 with tabs[2]:
-    import re
+    topic = st.text_input("Chủ đề")
+    number = st.slider("Số câu",1,10,5)
 
-    st.markdown("""
-    <style>
-    .quiz-wrap {
-        padding: 8px 0 4px 0;
-    }
-    .quiz-card {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 18px;
-        padding: 18px 18px 8px 18px;
-        margin-bottom: 18px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
-    }
-    .quiz-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 14px;
-    }
-    .quiz-meta {
-        color: #6b7280;
-        font-size: 14px;
-        margin-bottom: 6px;
-    }
-    .quiz-result-card {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 14px 16px;
-        margin-bottom: 12px;
-    }
-    .quiz-correct {
-        color: #15803d;
-        font-weight: 600;
-    }
-    .quiz-wrong {
-        color: #b91c1c;
-        font-weight: 600;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div class="quiz-wrap">', unsafe_allow_html=True)
-    st.subheader("📝 Tạo câu hỏi trắc nghiệm")
-
-    topic = st.text_input("Chủ đề", placeholder="Ví dụ: Tụ điện, dòng điện xoay chiều, định luật Ohm...")
-    number = st.slider("Số câu", 1, 10, 5)
-
-    col_a, col_b = st.columns([1, 3])
-    with col_a:
-        create_quiz = st.button("Tạo đề", key="quiz_btn", use_container_width=True)
-
-    if create_quiz:
-        if topic.strip():
+    if st.button("Tạo đề", key="quiz_btn"):
+        if topic:
             prompt = f"""
-Tạo {number} câu trắc nghiệm vật lí về chủ đề: {topic}
+            Tạo {number} câu trắc nghiệm vật lí về {topic}
 
-Yêu cầu định dạng đúng chính xác như sau:
-Câu 1: Nội dung câu hỏi
-A. Nội dung đáp án A
-B. Nội dung đáp án B
-C. Nội dung đáp án C
-D. Nội dung đáp án D
-Đáp án: A
-Giải thích: Nội dung giải thích
+            Format:
+            Câu 1: ...
+            A. ...
+            B. ...
+            C. ...
+            D. ...
+            Đáp án: A
+            Giải thích: ...
 
-Câu 2: Nội dung câu hỏi
-A. Nội dung đáp án A
-B. Nội dung đáp án B
-C. Nội dung đáp án C
-D. Nội dung đáp án D
-Đáp án: B
-Giải thích: Nội dung giải thích
+            (lặp lại)
+            """
 
-Không thêm mở đầu.
-Không thêm kết luận.
-Không dùng markdown như ** hoặc -.
-"""
-
-            result = ask_ai([
-                {
-                    "role": "system",
-                    "content": "Bạn là giáo viên vật lí. Hãy tạo đề trắc nghiệm đúng định dạng người dùng yêu cầu."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ])
-
+            result = ask_ai([{"role":"user","content":prompt}])
             st.session_state.quiz_text = result
 
-            # reset các lựa chọn cũ khi tạo đề mới
-            keys_to_delete = [k for k in st.session_state.keys() if k.startswith("quiz_")]
-            for k in keys_to_delete:
-                del st.session_state[k]
-
-            if "quiz_submitted" in st.session_state:
-                del st.session_state["quiz_submitted"]
-        else:
-            st.warning("Vui lòng nhập chủ đề trước khi tạo đề.")
-
     if "quiz_text" in st.session_state:
-        text = st.session_state.quiz_text.strip()
+        text = st.session_state.quiz_text
 
-        # Tách từng câu hỏi theo mẫu "Câu số:"
-        questions = re.split(r"\n(?=Câu\s+\d+\s*:)", text)
-        questions = [q.strip() for q in questions if q.strip()]
+        questions = text.split("Câu ")[1:]
 
-        parsed_questions = []
+        user_answers = []
+        correct_answers = []
 
-        for q in questions:
-            lines = [line.strip() for line in q.split("\n") if line.strip()]
-            if len(lines) < 7:
-                continue
+        for i, q in enumerate(questions):
+            lines = q.split("\n")
 
-            first_line = lines[0]
-            question_text = re.sub(r"^Câu\s+\d+\s*:\s*", "", first_line).strip()
+            question = lines[0]
+            A = lines[1].replace("A. ","")
+            B = lines[2].replace("B. ","")
+            C = lines[3].replace("C. ","")
+            D = lines[4].replace("D. ","")
 
-            option_a = re.sub(r"^A\.\s*", "", lines[1]).strip()
-            option_b = re.sub(r"^B\.\s*", "", lines[2]).strip()
-            option_c = re.sub(r"^C\.\s*", "", lines[3]).strip()
-            option_d = re.sub(r"^D\.\s*", "", lines[4]).strip()
+            correct = lines[5].replace("Đáp án: ","").strip()
+            explain = lines[6].replace("Giải thích: ","")
 
-            correct = re.sub(r"^Đáp án:\s*", "", lines[5]).strip().upper()
-            explain = re.sub(r"^Giải thích:\s*", "", lines[6]).strip()
+            st.write(f"### Câu {i+1}: {question}")
 
-            parsed_questions.append({
-                "question": question_text,
-                "options": {
-                    "A": option_a,
-                    "B": option_b,
-                    "C": option_c,
-                    "D": option_d
-                },
-                "correct": correct,
-                "explain": explain
-            })
+            choice = st.radio(
+                "Chọn đáp án:",
+                ["A", "B", "C", "D"],
+                key=f"quiz_{i}"
+            )
 
-        if parsed_questions:
-            st.markdown(f"""
-            <div class="quiz-meta">
-                Đã tạo <b>{len(parsed_questions)}</b> câu hỏi cho chủ đề: <b>{topic}</b>
-            </div>
-            """, unsafe_allow_html=True)
+            user_answers.append(choice)
+            correct_answers.append((correct, explain))
 
-            for i, q in enumerate(parsed_questions):
-                st.markdown('<div class="quiz-card">', unsafe_allow_html=True)
-                st.markdown(f'<div class="quiz-title">Câu {i+1}: {q["question"]}</div>', unsafe_allow_html=True)
+            st.write(f"A. {A}")
+            st.write(f"B. {B}")
+            st.write(f"C. {C}")
+            st.write(f"D. {D}")
 
-                option_labels = [
-                    f"A. {q['options']['A']}",
-                    f"B. {q['options']['B']}",
-                    f"C. {q['options']['C']}",
-                    f"D. {q['options']['D']}",
-                ]
+        if st.button("Nộp bài", key="submit_quiz"):
+            score = 0
 
-                st.radio(
-                    "Chọn đáp án",
-                    option_labels,
-                    index=None,
-                    key=f"quiz_{i}",
-                    label_visibility="visible"
-                )
+            for i in range(len(user_answers)):
+                if user_answers[i] == correct_answers[i][0]:
+                    score += 1
 
-                st.markdown("</div>", unsafe_allow_html=True)
+            st.success(f"🎯 Điểm: {score}/{len(user_answers)}")
 
-            col_submit, col_empty = st.columns([1, 3])
-            with col_submit:
-                submit_quiz = st.button("Nộp bài", key="submit_quiz", use_container_width=True)
+            for i in range(len(user_answers)):
+                st.write("---")
+                st.write(f"Câu {i+1}")
+                st.write(f"Đáp án đúng: {correct_answers[i][0]}")
+                st.write(f"Giải thích: {correct_answers[i][1]}")
 
-            if submit_quiz:
-                st.session_state.quiz_submitted = True
-
-            if st.session_state.get("quiz_submitted", False):
-                score = 0
-
-                for i, q in enumerate(parsed_questions):
-                    selected = st.session_state.get(f"quiz_{i}")
-                    if selected is None:
-                        continue
-
-                    selected_letter = selected.split(".")[0].strip().upper()
-                    if selected_letter == q["correct"]:
-                        score += 1
-
-                st.success(f"🎯 Điểm của bạn: {score}/{len(parsed_questions)}")
-
-                st.markdown("### Đáp án và giải thích")
-
-                for i, q in enumerate(parsed_questions):
-                    selected = st.session_state.get(f"quiz_{i}")
-
-                    if selected is None:
-                        selected_letter = "Chưa chọn"
-                        result_class = "quiz-wrong"
-                        result_text = "Bạn chưa chọn đáp án"
-                    else:
-                        selected_letter = selected.split(".")[0].strip().upper()
-                        if selected_letter == q["correct"]:
-                            result_class = "quiz-correct"
-                            result_text = "Bạn làm đúng"
-                        else:
-                            result_class = "quiz-wrong"
-                            result_text = "Bạn làm sai"
-
-                    st.markdown(f"""
-                    <div class="quiz-result-card">
-                        <div><b>Câu {i+1}:</b> {q["question"]}</div>
-                        <div class="{result_class}">{result_text}</div>
-                        <div><b>Bạn chọn:</b> {selected_letter}</div>
-                        <div><b>Đáp án đúng:</b> {q["correct"]}</div>
-                        <div><b>Giải thích:</b> {q["explain"]}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # ========================
 # TAB 4: PHÒNG THÍ NGHIỆM AI
