@@ -1699,7 +1699,6 @@ Bài làm học sinh:
 # TAB 7: CÔNG THỨC THÔNG MINH
 # ========================
 with tabs[5]:
-
     st.subheader("📚 Trung tâm công thức Vật lí")
 
     mode = st.radio(
@@ -1719,7 +1718,6 @@ with tabs[5]:
     # TRA CỨU
     # =========================
     if mode == "Tra cứu công thức":
-
         names = [x["name"] for x in FORMULA_DATA]
 
         selected = st.selectbox(
@@ -1730,33 +1728,26 @@ with tabs[5]:
         formula = next(x for x in FORMULA_DATA if x["name"] == selected)
 
         st.latex(formula["formula_latex"])
-
         st.write(formula["meaning"])
 
         st.markdown("### Đại lượng")
-
         for k, v in formula["variables"].items():
             st.write(f"- {k}: {v}")
 
         st.markdown("### Điều kiện")
-
         st.info(formula["conditions"])
 
         st.markdown("### Lỗi thường gặp")
-
         for m in formula["mistakes"]:
             st.warning(m)
 
         st.markdown("### Ví dụ")
-
         st.success(formula["example"])
-
 
     # =========================
     # GIẢI THÍCH
     # =========================
     elif mode == "Giải thích công thức":
-
         names = [x["name"] for x in FORMULA_DATA]
 
         selected = st.selectbox(
@@ -1768,28 +1759,26 @@ with tabs[5]:
         formula = next(x for x in FORMULA_DATA if x["name"] == selected)
 
         st.latex(formula["formula_latex"])
-
         st.write(formula["meaning"])
 
         if st.button("🤖 AI giải thích", key="ai_explain_formula"):
+            prompt = f"""
+Giải thích công thức vật lí sau cho học sinh THPT.
 
-                prompt = f"""
-                    Giải thích công thức vật lí sau cho học sinh THPT.
-                    
-                    Tên: {formula["name"]}
-                    Công thức: {formula["formula_text"]}
-                    
-                    Yêu cầu:
-                    - Viết rõ ràng theo các mục:
-                    1. Giải thích đơn giản
-                    2. Ý nghĩa các đại lượng
-                    3. Khi nào dùng
-                    4. Lỗi hay gặp
-                    5. Ví dụ ngắn
-                    - Công thức nguyên dòng thì đặt riêng giữa dấu $$...$$
-                    - Công thức nằm trong câu thì dùng $...$
-                    - Không dùng code block
-                    """
+Tên: {formula["name"]}
+Công thức: {formula["formula_text"]}
+
+Yêu cầu:
+- Viết rõ ràng theo các mục:
+1. Giải thích đơn giản
+2. Ý nghĩa các đại lượng
+3. Khi nào dùng
+4. Lỗi hay gặp
+5. Ví dụ ngắn
+- Công thức nguyên dòng thì đặt riêng giữa dấu $$...$$
+- Công thức nằm trong câu thì dùng $...$
+- Không dùng code block
+"""
 
             answer = ask_ai([
                 {"role": "system", "content": "Gia sư vật lí"},
@@ -1798,12 +1787,10 @@ with tabs[5]:
 
             render_ai_math(answer)
 
-
     # =========================
     # RÚT BIẾN
     # =========================
     elif mode == "Rút biến / biến đổi":
-
         names = [x["name"] for x in FORMULA_DATA]
 
         selected = st.selectbox(
@@ -1815,7 +1802,6 @@ with tabs[5]:
         formula = next(x for x in FORMULA_DATA if x["name"] == selected)
 
         st.markdown("### Công thức gốc")
-
         st.latex(formula["formula_latex"])
 
         var_list = list(formula["variables"].keys())
@@ -1826,30 +1812,28 @@ with tabs[5]:
         )
 
         st.markdown("### Đại lượng")
-
         for k, v in formula["variables"].items():
             st.write(f"- {k}: {v}")
 
-        if st.button("🔄 Rút biến bằng AI"):
+        if st.button("🔄 Rút biến bằng AI", key="derive_formula_ai"):
+            prompt = f"""
+Hãy rút {target} từ công thức:
 
-                prompt = f"""
-                    Hãy rút {target} từ công thức:
-                    
-                    {formula["formula_text"]}
-                    
-                    Yêu cầu:
-                    - Trình bày ngắn gọn từng bước
-                    - Mỗi bước biến đổi công thức viết trên một dòng riêng bằng $$...$$
-                    - Phần giải thích viết bằng câu bình thường
-                    - Không dùng code block
-                    
-                    Ví dụ:
-                    Bắt đầu từ:
-                    $$F = ma$$
-                    
-                    Suy ra:
-                    $$a = \\frac{{F}}{{m}}$$
-                    """
+{formula["formula_text"]}
+
+Yêu cầu:
+- Trình bày ngắn gọn từng bước
+- Mỗi bước biến đổi công thức viết trên một dòng riêng bằng $$...$$
+- Phần giải thích viết bằng câu bình thường
+- Không dùng code block
+
+Ví dụ:
+Bắt đầu từ:
+$$F = ma$$
+
+Suy ra:
+$$a = \\frac{{F}}{{m}}$$
+"""
 
             answer = ask_ai([
                 {"role": "system", "content": "Giáo viên vật lí"},
@@ -1858,50 +1842,50 @@ with tabs[5]:
 
             render_ai_math(answer)
 
-
     # =========================
     # TÌM CÔNG THỨC
     # =========================
     elif mode == "Tìm công thức theo bài toán":
-
         text = st.text_area(
             "Nhập bài toán",
             placeholder="tính điện trở khi biết U và I"
         )
 
-        if st.button("🤖 AI chọn công thức"):
+        if st.button("🤖 AI chọn công thức", key="ai_find_formula"):
+            if text.strip():
+                summary = "\n".join([
+                    f"{x['name']} : {x['formula_text']}"
+                    for x in FORMULA_DATA
+                ])
 
-            summary = "\n".join([
-                f"{x['name']} : {x['formula_text']}"
-                for x in FORMULA_DATA
-            ])
-
-            prompt = f"""
+                prompt = f"""
 Chọn công thức phù hợp.
 
 Bài toán:
-
 {text}
 
 Danh sách:
-
 {summary}
 
 Trả lời:
+- công thức phù hợp nhất
+- lý do chọn
+- khi nào dùng
+- ví dụ ngắn
 
-- công thức
-- lý do
-- ví dụ
-
-Viết công thức trong $
+Công thức riêng dòng dùng $$...$$
+Công thức trong câu dùng $...$
+Không dùng code block
 """
 
-            answer = ask_ai([
-                {"role": "system", "content": "Gia sư vật lí"},
-                {"role": "user", "content": prompt}
-            ])
+                answer = ask_ai([
+                    {"role": "system", "content": "Gia sư vật lí"},
+                    {"role": "user", "content": prompt}
+                ])
 
-            render_ai_math(answer)
+                render_ai_math(answer)
+            else:
+                st.warning("Vui lòng nhập bài toán.")
 
 # ========================
 # TAB 7: LỊCH SỬ
