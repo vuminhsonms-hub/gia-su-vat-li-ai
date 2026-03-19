@@ -71,7 +71,6 @@ tabs = st.tabs([
     "🧠 Giải bài",
     "📝 Trắc nghiệm",
     "🔬 Phòng thí nghiệm AI",
-    "🧪 Mô phỏng",
     "📝 Chấm bài",
     "📚 Công thức",
     "📜 Lịch sử"
@@ -319,61 +318,301 @@ Không viết lời kết.
                         st.write(f"Đáp án đúng: {q['correct']}")
                         st.write(f"Giải thích: {q['explain']}")
 # ========================
-# TAB 4: PHÒNG THÍ NGHIỆM AI
+# TAB 4: PHÒNG THÍ NGHIỆM AI (NÂNG CẤP: THẬT + ẢO + AI)
 # ========================
 with tabs[3]:
-    st.subheader("🔬 Phòng thí nghiệm Vật lí AI")
+    st.subheader("🔬 Phòng thí nghiệm Vật lí AI thông minh")
+    st.write("Kết hợp thí nghiệm thực, mô phỏng ảo và phân tích AI.")
 
-    exp_type = st.selectbox("Chọn thí nghiệm", [
-        "Định luật Ohm",
-        "Rơi tự do",
-        "Dao động điều hòa"
-    ])
+    lab_mode = st.radio(
+        "Chọn chế độ",
+        ["Thí nghiệm thực", "Thí nghiệm ảo", "AI phân tích thông minh"],
+        horizontal=True
+    )
 
-    x_input = st.text_input("Dữ liệu X")
-    y_input = st.text_input("Dữ liệu Y")
+    experiment = st.selectbox(
+        "Chọn thí nghiệm",
+        ["Định luật Ohm", "Rơi tự do", "Dao động điều hòa / Con lắc đơn"]
+    )
 
-    if st.button("Phân tích", key="exp_btn"):
-        try:
-            x = np.array(list(map(float,x_input.split())))
-            y = np.array(list(map(float,y_input.split())))
+    # ---------------------------------
+    # CHẾ ĐỘ 1: THÍ NGHIỆM THỰC
+    # ---------------------------------
+    if lab_mode == "Thí nghiệm thực":
+        st.markdown("### 🧪 Nhập dữ liệu thí nghiệm thực tế")
 
-            slope, intercept, r, _, _ = linregress(x,y)
+        if experiment == "Định luật Ohm":
+            st.info("Nhập dữ liệu điện áp U và cường độ dòng điện I theo từng lần đo.")
+
+            x_input = st.text_input("Dữ liệu U (V), cách nhau bằng khoảng trắng", placeholder="1 2 3 4 5")
+            y_input = st.text_input("Dữ liệu I (A), cách nhau bằng khoảng trắng", placeholder="0.1 0.2 0.3 0.4 0.5")
+
+            if st.button("Phân tích thí nghiệm Ohm", key="analyze_ohm_real"):
+                try:
+                    x = np.array(list(map(float, x_input.split())))
+                    y = np.array(list(map(float, y_input.split())))
+
+                    if len(x) != len(y) or len(x) < 2:
+                        st.error("Cần nhập cùng số lượng giá trị cho U và I, tối thiểu 2 điểm.")
+                    else:
+                        slope, intercept, r, _, _ = linregress(x, y)
+
+                        fig, ax = plt.subplots()
+                        ax.scatter(x, y, label="Dữ liệu đo")
+                        ax.plot(x, slope * x + intercept, label="Đường hồi quy")
+                        ax.set_xlabel("U (V)")
+                        ax.set_ylabel("I (A)")
+                        ax.set_title("Đồ thị I - U")
+                        ax.legend()
+                        st.pyplot(fig)
+
+                        R_est = 1 / slope if slope != 0 else None
+
+                        st.write(f"**Hệ số góc a = {slope:.4f}**")
+                        st.write(f"**Hệ số tương quan R = {r:.4f}**")
+                        if R_est is not None:
+                            st.write(f"**Điện trở ước lượng R ≈ {R_est:.4f} Ω**")
+                        st.write(f"**Phương trình gần đúng:** I = {slope:.4f}·U + {intercept:.4f}")
+
+                        ai_prompt = f"""
+                        Đây là kết quả thí nghiệm Định luật Ohm.
+
+                        Dữ liệu U: {x.tolist()}
+                        Dữ liệu I: {y.tolist()}
+                        Hệ số góc: {slope}
+                        Hệ số chặn: {intercept}
+                        Hệ số tương quan R: {r}
+
+                        Hãy:
+                        1. Nhận xét xem dữ liệu có phù hợp định luật Ohm không
+                        2. Giải thích ý nghĩa vật lí của hệ số góc
+                        3. Nêu các nguyên nhân gây sai số
+                        4. Đưa ra kết luận ngắn gọn, dễ hiểu cho học sinh THPT
+                        """
+
+                        answer = ask_ai([
+                            {"role": "system", "content": "Bạn là giáo viên vật lí, giải thích rõ ràng, dễ hiểu, ngắn gọn."},
+                            {"role": "user", "content": ai_prompt}
+                        ])
+
+                        st.markdown("### 🤖 Nhận xét của AI")
+                        st.markdown(answer)
+
+                except Exception as e:
+                    st.error(f"Dữ liệu không hợp lệ: {e}")
+
+        elif experiment == "Rơi tự do":
+            st.info("Nhập dữ liệu thời gian t và quãng đường s để kiểm tra quy luật rơi tự do.")
+
+            t_input = st.text_input("Dữ liệu t (s)", placeholder="0.1 0.2 0.3 0.4 0.5")
+            s_input = st.text_input("Dữ liệu s (m)", placeholder="0.05 0.2 0.44 0.8 1.2")
+
+            if st.button("Phân tích thí nghiệm rơi tự do", key="analyze_freefall_real"):
+                try:
+                    t = np.array(list(map(float, t_input.split())))
+                    s = np.array(list(map(float, s_input.split())))
+
+                    if len(t) != len(s) or len(t) < 2:
+                        st.error("Cần nhập cùng số lượng giá trị cho t và s, tối thiểu 2 điểm.")
+                    else:
+                        g_est_list = []
+                        for i in range(len(t)):
+                            if t[i] != 0:
+                                g_est_list.append(2 * s[i] / (t[i] ** 2))
+
+                        g_mean = np.mean(g_est_list) if g_est_list else 0
+
+                        fig, ax = plt.subplots()
+                        ax.scatter(t, s, label="Dữ liệu đo")
+                        ax.set_xlabel("t (s)")
+                        ax.set_ylabel("s (m)")
+                        ax.set_title("Đồ thị s - t")
+                        ax.legend()
+                        st.pyplot(fig)
+
+                        st.write(f"**Gia tốc rơi tự do trung bình ước lượng: g ≈ {g_mean:.4f} m/s²**")
+
+                        ai_prompt = f"""
+                        Đây là kết quả thí nghiệm rơi tự do.
+
+                        Dữ liệu thời gian t: {t.tolist()}
+                        Dữ liệu quãng đường s: {s.tolist()}
+                        Giá trị g trung bình ước lượng: {g_mean}
+
+                        Hãy:
+                        1. Nhận xét sự phù hợp của dữ liệu với công thức s = 1/2 g t^2
+                        2. Chỉ ra sai số có thể có
+                        3. Giải thích vì sao g thực nghiệm có thể khác 9.8
+                        4. Kết luận ngắn gọn cho học sinh
+                        """
+
+                        answer = ask_ai([
+                            {"role": "system", "content": "Bạn là giáo viên vật lí, trình bày rõ ràng, dễ hiểu."},
+                            {"role": "user", "content": ai_prompt}
+                        ])
+
+                        st.markdown("### 🤖 Nhận xét của AI")
+                        st.markdown(answer)
+
+                except Exception as e:
+                    st.error(f"Dữ liệu không hợp lệ: {e}")
+
+        elif experiment == "Dao động điều hòa / Con lắc đơn":
+            st.info("Nhập dữ liệu chiều dài l và chu kỳ T để kiểm tra công thức con lắc đơn.")
+
+            l_input = st.text_input("Dữ liệu l (m)", placeholder="0.2 0.4 0.6 0.8 1.0")
+            T_input = st.text_input("Dữ liệu T (s)", placeholder="0.9 1.27 1.55 1.79 2.0")
+
+            if st.button("Phân tích thí nghiệm con lắc đơn", key="analyze_pendulum_real"):
+                try:
+                    l = np.array(list(map(float, l_input.split())))
+                    T = np.array(list(map(float, T_input.split())))
+
+                    if len(l) != len(T) or len(l) < 2:
+                        st.error("Cần nhập cùng số lượng giá trị cho l và T, tối thiểu 2 điểm.")
+                    else:
+                        T2 = T ** 2
+                        slope, intercept, r, _, _ = linregress(l, T2)
+
+                        fig, ax = plt.subplots()
+                        ax.scatter(l, T2, label="Dữ liệu đo")
+                        ax.plot(l, slope * l + intercept, label="Đường hồi quy")
+                        ax.set_xlabel("l (m)")
+                        ax.set_ylabel("T² (s²)")
+                        ax.set_title("Đồ thị T² - l")
+                        ax.legend()
+                        st.pyplot(fig)
+
+                        g_est = (4 * np.pi ** 2) / slope if slope != 0 else None
+
+                        st.write(f"**Hệ số góc = {slope:.4f}**")
+                        st.write(f"**Hệ số tương quan R = {r:.4f}**")
+                        if g_est is not None:
+                            st.write(f"**Gia tốc trọng trường ước lượng: g ≈ {g_est:.4f} m/s²**")
+
+                        ai_prompt = f"""
+                        Đây là kết quả thí nghiệm con lắc đơn.
+
+                        Dữ liệu l: {l.tolist()}
+                        Dữ liệu T: {T.tolist()}
+                        Hệ số góc của đồ thị T^2 theo l: {slope}
+                        Hệ số tương quan R: {r}
+                        Giá trị g ước lượng: {g_est}
+
+                        Hãy:
+                        1. Nhận xét mức độ phù hợp với công thức T = 2*pi*sqrt(l/g)
+                        2. Giải thích tại sao dùng đồ thị T^2 theo l
+                        3. Nêu các nguyên nhân sai số
+                        4. Kết luận ngắn gọn, dễ hiểu
+                        """
+
+                        answer = ask_ai([
+                            {"role": "system", "content": "Bạn là giáo viên vật lí THPT, trình bày dễ hiểu, có tính sư phạm."},
+                            {"role": "user", "content": ai_prompt}
+                        ])
+
+                        st.markdown("### 🤖 Nhận xét của AI")
+                        st.markdown(answer)
+
+                except Exception as e:
+                    st.error(f"Dữ liệu không hợp lệ: {e}")
+
+    # ---------------------------------
+    # CHẾ ĐỘ 2: THÍ NGHIỆM ẢO
+    # ---------------------------------
+    elif lab_mode == "Thí nghiệm ảo":
+        st.markdown("### 🖥️ Mô phỏng thí nghiệm ảo")
+
+        if experiment == "Định luật Ohm":
+            R = st.slider("Điện trở R (Ω)", 1.0, 100.0, 10.0)
+            U_max = st.slider("Điện áp cực đại Umax (V)", 1.0, 24.0, 12.0)
+
+            U_values = np.linspace(0, U_max, 50)
+            I_values = U_values / R
 
             fig, ax = plt.subplots()
-            ax.scatter(x,y)
-            ax.plot(x, slope*x + intercept)
+            ax.plot(U_values, I_values)
+            ax.set_xlabel("U (V)")
+            ax.set_ylabel("I (A)")
+            ax.set_title("Mô phỏng định luật Ohm")
             st.pyplot(fig)
 
-            st.write(f"Hệ số góc: {slope:.3f}")
-            st.write(f"R: {r:.3f}")
+            st.write(f"Với R = {R:.2f} Ω, ta có I = U / R.")
 
-            answer = ask_ai([
-                {"role":"user","content":f"Giải thích kết quả thí nghiệm {exp_type}"}
-            ])
+        elif experiment == "Rơi tự do":
+            g = st.slider("Gia tốc g (m/s²)", 1.0, 20.0, 9.8)
+            t_max = st.slider("Thời gian quan sát (s)", 1.0, 10.0, 5.0)
 
-            st.markdown(answer)
+            t = np.linspace(0, t_max, 200)
+            s = 0.5 * g * t**2
 
-        except:
-            st.error("Dữ liệu không hợp lệ!")
+            fig, ax = plt.subplots()
+            ax.plot(t, s)
+            ax.set_xlabel("t (s)")
+            ax.set_ylabel("s (m)")
+            ax.set_title("Mô phỏng rơi tự do")
+            st.pyplot(fig)
 
-# ========================
-# TAB 5: MÔ PHỎNG
-# ========================
-with tabs[4]:
-    st.subheader("Con lắc đơn")
+            st.write("Phương trình sử dụng: s = 1/2 g t²")
 
-    L = st.slider("Chiều dài (m)", 0.1, 2.0, 1.0)
-    g = 9.8
+        elif experiment == "Dao động điều hòa / Con lắc đơn":
+            L = st.slider("Chiều dài dây l (m)", 0.1, 2.0, 1.0)
+            g = st.slider("Gia tốc trọng trường g (m/s²)", 1.0, 20.0, 9.8)
 
-    T = 2 * np.pi * np.sqrt(L / g)
+            T = 2 * np.pi * np.sqrt(L / g)
+            t = np.linspace(0, 2 * T, 400)
+            x = np.cos(2 * np.pi * t / T)
 
-    st.write(f"Chu kỳ T = {T:.2f} s")
+            fig, ax = plt.subplots()
+            ax.plot(t, x)
+            ax.set_xlabel("t (s)")
+            ax.set_ylabel("Li độ chuẩn hóa")
+            ax.set_title("Mô phỏng dao động con lắc đơn")
+            st.pyplot(fig)
+
+            st.write(f"Chu kỳ dao động: **T = {T:.4f} s**")
+
+    # ---------------------------------
+    # CHẾ ĐỘ 3: AI PHÂN TÍCH THÔNG MINH
+    # ---------------------------------
+    elif lab_mode == "AI phân tích thông minh":
+        st.markdown("### 🤖 Phân tích thí nghiệm bằng AI")
+        student_result = st.text_area(
+            "Nhập mô tả kết quả thí nghiệm hoặc số liệu và nhận xét của bạn",
+            placeholder="Ví dụ: Tôi đo được U = 1 2 3 4 5 và I = 0.11 0.19 0.31 0.39 0.52. Theo tôi dữ liệu gần đúng định luật Ohm..."
+        )
+
+        if st.button("AI phân tích thí nghiệm", key="ai_lab_analysis"):
+            if not student_result.strip():
+                st.warning("Vui lòng nhập nội dung thí nghiệm.")
+            else:
+                ai_prompt = f"""
+                Học sinh đang làm thí nghiệm: {experiment}
+
+                Nội dung học sinh cung cấp:
+                {student_result}
+
+                Hãy phản hồi theo đúng cấu trúc:
+                1. Mức độ đúng của kết quả
+                2. Nhận xét về sự phù hợp với lý thuyết
+                3. Sai số có thể gặp
+                4. Cách cải thiện thí nghiệm
+                5. Kết luận ngắn gọn, dễ hiểu cho học sinh THPT
+                """
+
+                answer = ask_ai([
+                    {"role": "system", "content": "Bạn là gia sư vật lí AI, phản hồi rõ ràng, dễ hiểu, có tính hướng dẫn học sinh."},
+                    {"role": "user", "content": ai_prompt}
+                ])
+
+                st.markdown(answer)
+
+
 
 # ========================
 # TAB 6: CHẤM BÀI
 # ========================
-with tabs[5]:
+with tabs[4]:
     student_answer = st.text_area("Bài làm học sinh")
     correct_answer = st.text_area("Đáp án đúng")
 
@@ -388,7 +627,7 @@ with tabs[5]:
 # ========================
 # TAB 7: CÔNG THỨC
 # ========================
-with tabs[6]:
+with tabs[5]:
     st.latex("v=v_0+at")
     st.latex("s=v_0t+\\frac{1}{2}at^2")
     st.latex("I=\\frac{U}{R}")
@@ -397,7 +636,7 @@ with tabs[6]:
 # ========================
 # TAB 8: LỊCH SỬ
 # ========================
-with tabs[7]:
+with tabs[6]:
     st.subheader("Lịch sử học tập")
 
     # Kiểm tra có history chưa
