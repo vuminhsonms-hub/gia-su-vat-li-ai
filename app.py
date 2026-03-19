@@ -1773,23 +1773,23 @@ with tabs[5]:
 
         if st.button("🤖 AI giải thích", key="ai_explain_formula"):
 
-prompt = f"""
-Giải thích công thức vật lí sau cho học sinh THPT.
-
-Tên: {formula["name"]}
-Công thức: {formula["formula_text"]}
-
-Yêu cầu:
-- Viết rõ ràng theo các mục:
-1. Giải thích đơn giản
-2. Ý nghĩa các đại lượng
-3. Khi nào dùng
-4. Lỗi hay gặp
-5. Ví dụ ngắn
-- Công thức nguyên dòng thì đặt riêng giữa dấu $$...$$
-- Công thức nằm trong câu thì dùng $...$
-- Không dùng code block
-"""
+                prompt = f"""
+                Giải thích công thức vật lí sau cho học sinh THPT.
+                
+                Tên: {formula["name"]}
+                Công thức: {formula["formula_text"]}
+                
+                Yêu cầu:
+                - Viết rõ ràng theo các mục:
+                1. Giải thích đơn giản
+                2. Ý nghĩa các đại lượng
+                3. Khi nào dùng
+                4. Lỗi hay gặp
+                5. Ví dụ ngắn
+                - Công thức nguyên dòng thì đặt riêng giữa dấu $$...$$
+                - Công thức nằm trong câu thì dùng $...$
+                - Không dùng code block
+                """
 
             answer = ask_ai([
                 {"role": "system", "content": "Gia sư vật lí"},
@@ -1832,24 +1832,24 @@ Yêu cầu:
 
         if st.button("🔄 Rút biến bằng AI"):
 
-prompt = f"""
-Hãy rút {target} từ công thức:
-
-{formula["formula_text"]}
-
-Yêu cầu:
-- Trình bày ngắn gọn từng bước
-- Mỗi bước biến đổi công thức viết trên một dòng riêng bằng $$...$$
-- Phần giải thích viết bằng câu bình thường
-- Không dùng code block
-
-Ví dụ:
-Bắt đầu từ:
-$$F = ma$$
-
-Suy ra:
-$$a = \\frac{{F}}{{m}}$$
-"""
+                prompt = f"""
+                Hãy rút {target} từ công thức:
+                
+                {formula["formula_text"]}
+                
+                Yêu cầu:
+                - Trình bày ngắn gọn từng bước
+                - Mỗi bước biến đổi công thức viết trên một dòng riêng bằng $$...$$
+                - Phần giải thích viết bằng câu bình thường
+                - Không dùng code block
+                
+                Ví dụ:
+                Bắt đầu từ:
+                $$F = ma$$
+                
+                Suy ra:
+                $$a = \\frac{{F}}{{m}}$$
+                """
 
             answer = ask_ai([
                 {"role": "system", "content": "Giáo viên vật lí"},
