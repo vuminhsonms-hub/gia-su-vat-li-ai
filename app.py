@@ -211,11 +211,13 @@ else:
 # ========================
 st.markdown("""
 <div class="main-title-wrap">
+    <center>
     <div class="main-title">🔬 Gia sư Vật lí AI – Hỗ trợ học tập và thí nghiệm Vật lí thông minh</div>
     <div class="main-subtitle">
         Hệ thống học tập Vật lí THPT tích hợp hỏi đáp AI, giải bài, trắc nghiệm, phòng thí nghiệm thông minh,
         mô phỏng, xử lí số liệu và viết báo cáo thí nghiệm tự động.
     </div>
+    </center>
 </div>
 """, unsafe_allow_html=True)
 
