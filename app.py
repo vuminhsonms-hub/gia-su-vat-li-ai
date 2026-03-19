@@ -158,19 +158,19 @@ with tabs[2]:
 
     st.markdown("""
     <style>
-    .quiz-card {
+    .quiz-box {
         background: #ffffff;
         border: 1px solid #e5e7eb;
         border-radius: 16px;
-        padding: 16px;
-        margin-bottom: 16px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     .quiz-question {
-        font-size: 22px;
+        font-size: 28px;
         font-weight: 700;
         color: #1f2937;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     .quiz-result {
         background: #f9fafb;
@@ -236,7 +236,6 @@ Không viết thêm lời kết.
             st.session_state.quiz_text = result
             st.session_state.quiz_submitted = False
 
-            # xóa lựa chọn cũ
             for k in list(st.session_state.keys()):
                 if k.startswith("quiz_answer_"):
                     del st.session_state[k]
@@ -294,27 +293,28 @@ Không viết thêm lời kết.
             st.info(f"Đã tạo {len(parsed_questions)} câu hỏi.")
 
             for i, q in enumerate(parsed_questions):
-                st.markdown('<div class="quiz-card">', unsafe_allow_html=True)
-                st.markdown(
-                    f'<div class="quiz-question">Câu {i+1}: {q["question"]}</div>',
-                    unsafe_allow_html=True
-                )
+                with st.container():
+                    st.markdown('<div class="quiz-box">', unsafe_allow_html=True)
+                    st.markdown(
+                        f'<div class="quiz-question">Câu {i+1}: {q["question"]}</div>',
+                        unsafe_allow_html=True
+                    )
 
-                options_display = [
-                    f"A. {q['options']['A']}",
-                    f"B. {q['options']['B']}",
-                    f"C. {q['options']['C']}",
-                    f"D. {q['options']['D']}",
-                ]
+                    options_display = [
+                        f"A. {q['options']['A']}",
+                        f"B. {q['options']['B']}",
+                        f"C. {q['options']['C']}",
+                        f"D. {q['options']['D']}",
+                    ]
 
-                st.radio(
-                    "Chọn đáp án:",
-                    options_display,
-                    index=None,
-                    key=f"quiz_answer_{i}"
-                )
+                    st.radio(
+                        "Chọn đáp án:",
+                        options_display,
+                        index=None,
+                        key=f"quiz_answer_{i}"
+                    )
 
-                st.markdown("</div>", unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
 
             if st.button("Nộp bài", key="submit_quiz", use_container_width=True):
                 st.session_state.quiz_submitted = True
@@ -330,16 +330,11 @@ Không viết thêm lời kết.
                             score += 1
 
                 st.success(f"🎯 Điểm của bạn: {score}/{len(parsed_questions)}")
-
                 st.markdown("### Đáp án và giải thích")
 
                 for i, q in enumerate(parsed_questions):
                     selected = st.session_state.get(f"quiz_answer_{i}")
-
-                    if selected:
-                        selected_letter = selected.split(".")[0].strip().upper()
-                    else:
-                        selected_letter = "Chưa chọn"
+                    selected_letter = selected.split(".")[0].strip().upper() if selected else "Chưa chọn"
 
                     st.markdown('<div class="quiz-result">', unsafe_allow_html=True)
                     st.markdown(f"**Câu {i+1}: {q['question']}**")
@@ -347,8 +342,6 @@ Không viết thêm lời kết.
                     st.write(f"Đáp án đúng: {q['correct']}")
                     st.write(f"Giải thích: {q['explain']}")
                     st.markdown("</div>", unsafe_allow_html=True)
-
-
 # ========================
 # TAB 4: PHÒNG THÍ NGHIỆM AI
 # ========================
