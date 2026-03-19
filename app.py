@@ -1447,31 +1447,7 @@ Bài làm học sinh:
     else:
         st.caption("Nhập bài làm, đáp án rồi bấm “Chấm bài ngay” để xem kết quả.")
 
-# ========================
-# FORMULA DATA
-# ========================
-FORMULA_DATA = [
-    {
-        "name": "Định luật Ôm",
-        "chapter": "Điện học",
-        "grade": "11",
-        "formula_latex": r"I = \frac{U}{R}",
-        "formula_text": "I = U/R",
-        "variables": {
-            "I": "cường độ dòng điện (A)",
-            "U": "hiệu điện thế (V)",
-            "R": "điện trở (Ω)"
-        },
-        "meaning": "Cường độ dòng điện qua dây dẫn tỉ lệ thuận với hiệu điện thế và tỉ lệ nghịch với điện trở.",
-        "conditions": "Áp dụng cho vật dẫn tuân theo định luật Ôm ở nhiệt độ không đổi.",
-        "mistakes": [
-            "Nhầm R = I/U",
-            "Quên đơn vị Ω"
-        ],
-        "example": "U = 12 V, R = 4 Ω → I = 3 A.",
-        "keywords": ["điện", "dòng điện", "hiệu điện thế", "điện trở", "ohm"]
-    }
-]
+
 
 # ========================
 # TABS
