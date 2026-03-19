@@ -111,9 +111,6 @@ with tabs[0]:
 # ========================
 # TAB 2: GIẢI BÀI
 # ========================
-# ========================
-# TAB 2: GIẢI BÀI (CHUYỂN [ ... ] → st.latex)
-# ========================
 with tabs[1]:
     problem = st.text_area("Nhập bài tập")
 
@@ -131,7 +128,7 @@ with tabs[1]:
         if "history" not in st.session_state:
             st.session_state.history = []
 
-        # Thêm câu hỏi vào lịch sử
+        # Thêm câu hỏi vào history
         st.session_state.history.append({"question": problem, "answer": ""})
 
         answer = ask_ai([
@@ -140,27 +137,25 @@ with tabs[1]:
             {"role": "user", "content": prompt}
         ])
 
-        # Lưu đáp án vào lịch sử
+        # Lưu lại đáp án
         st.session_state.history[-1]["answer"] = answer
 
+        import re
         # Chia từng dòng
         for line in answer.split("\n"):
-            # Nếu dòng chứa [ ... ], parse ra công thức LaTeX
-            import re
-            match = re.search(r"\[\s*(.*?)\s*\]", line)
-            if match:
-                st.latex(match.group(1))
-                # In phần text trước và sau công thức nếu có
-                text_before = line[:match.start()].strip()
-                text_after = line[match.end():].strip()
-                if text_before:
-                    st.write(text_before)
-                if text_after:
-                    st.write(text_after)
+            # Nếu dòng chứa [ ... ], lấy công thức bên trong
+            matches = re.findall(r"\[\s*(.*?)\s*\]", line)
+            if matches:
+                # In text trước công thức (nếu có)
+                pre_text = re.sub(r"\[\s*.*?\s*\]", "", line).strip()
+                if pre_text:
+                    st.write(pre_text)
+                # Render từng công thức bằng st.latex
+                for m in matches:
+                    st.latex(m)
             else:
-                # Không có công thức, in bình thường
-                if line.strip():
-                    st.write(line)
+                # Dòng bình thường
+                st.write(line)
 # ========================
 # TAB 3: TRẮC NGHIỆM (ỔN ĐỊNH)
 # ========================
