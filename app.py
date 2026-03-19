@@ -156,32 +156,6 @@ with tabs[1]:
 with tabs[2]:
     import re
 
-    st.markdown("""
-    <style>
-    .quiz-box {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 14px 16px;
-        margin-bottom: 14px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .quiz-question {
-        font-size: 28px;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 8px;
-    }
-    .quiz-result {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 12px 14px;
-        margin-bottom: 10px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
     st.subheader("📝 Tạo câu hỏi trắc nghiệm")
 
     topic = st.text_input(
@@ -201,7 +175,7 @@ with tabs[2]:
             prompt = f"""
 Tạo {number} câu trắc nghiệm vật lí về chủ đề: {topic}.
 
-Bắt buộc đúng định dạng này:
+Bắt buộc đúng định dạng sau:
 Câu 1: Nội dung câu hỏi
 A. Nội dung đáp án A
 B. Nội dung đáp án B
@@ -211,15 +185,15 @@ D. Nội dung đáp án D
 Giải thích: Nội dung giải thích
 
 Câu 2: Nội dung câu hỏi
-A. ...
-B. ...
-C. ...
-D. ...
+A. Nội dung đáp án A
+B. Nội dung đáp án B
+C. Nội dung đáp án C
+D. Nội dung đáp án D
 Đáp án: B
-Giải thích: ...
+Giải thích: Nội dung giải thích
 
-Không viết thêm lời mở đầu.
-Không viết thêm lời kết.
+Không viết lời mở đầu.
+Không viết lời kết.
 """
 
             result = ask_ai([
@@ -236,6 +210,7 @@ Không viết thêm lời kết.
             st.session_state.quiz_text = result
             st.session_state.quiz_submitted = False
 
+            # Xóa các lựa chọn cũ khi tạo đề mới
             for k in list(st.session_state.keys()):
                 if k.startswith("quiz_answer_"):
                     del st.session_state[k]
@@ -268,9 +243,13 @@ Không viết thêm lời kết.
                 elif re.match(r"^D\.\s*", line):
                     options["D"] = re.sub(r"^D\.\s*", "", line).strip()
                 elif re.match(r"^Đáp án\s*:\s*", line, re.IGNORECASE):
-                    correct = re.sub(r"^Đáp án\s*:\s*", "", line, flags=re.IGNORECASE).strip().upper()
+                    correct = re.sub(
+                        r"^Đáp án\s*:\s*", "", line, flags=re.IGNORECASE
+                    ).strip().upper()
                 elif re.match(r"^Giải thích\s*:\s*", line, re.IGNORECASE):
-                    explain = re.sub(r"^Giải thích\s*:\s*", "", line, flags=re.IGNORECASE).strip()
+                    explain = re.sub(
+                        r"^Giải thích\s*:\s*", "", line, flags=re.IGNORECASE
+                    ).strip()
 
             if question_text and all(options.values()) and correct in ["A", "B", "C", "D"]:
                 parsed.append({
@@ -290,15 +269,11 @@ Không viết thêm lời kết.
             with st.expander("Xem nội dung AI trả về"):
                 st.code(st.session_state.quiz_text)
         else:
-            st.info(f"Đã tạo {len(parsed_questions)} câu hỏi.")
+            st.success(f"Đã tạo {len(parsed_questions)} câu hỏi.")
 
             for i, q in enumerate(parsed_questions):
-                with st.container():
-                    st.markdown('<div class="quiz-box">', unsafe_allow_html=True)
-                    st.markdown(
-                        f'<div class="quiz-question">Câu {i+1}: {q["question"]}</div>',
-                        unsafe_allow_html=True
-                    )
+                with st.container(border=True):
+                    st.markdown(f"### Câu {i+1}: {q['question']}")
 
                     options_display = [
                         f"A. {q['options']['A']}",
@@ -314,7 +289,7 @@ Không viết thêm lời kết.
                         key=f"quiz_answer_{i}"
                     )
 
-                    st.markdown('</div>', unsafe_allow_html=True)
+            st.write("")
 
             if st.button("Nộp bài", key="submit_quiz", use_container_width=True):
                 st.session_state.quiz_submitted = True
@@ -334,14 +309,15 @@ Không viết thêm lời kết.
 
                 for i, q in enumerate(parsed_questions):
                     selected = st.session_state.get(f"quiz_answer_{i}")
-                    selected_letter = selected.split(".")[0].strip().upper() if selected else "Chưa chọn"
+                    selected_letter = (
+                        selected.split(".")[0].strip().upper() if selected else "Chưa chọn"
+                    )
 
-                    st.markdown('<div class="quiz-result">', unsafe_allow_html=True)
-                    st.markdown(f"**Câu {i+1}: {q['question']}**")
-                    st.write(f"Bạn chọn: {selected_letter}")
-                    st.write(f"Đáp án đúng: {q['correct']}")
-                    st.write(f"Giải thích: {q['explain']}")
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    with st.container(border=True):
+                        st.markdown(f"**Câu {i+1}: {q['question']}**")
+                        st.write(f"Bạn chọn: {selected_letter}")
+                        st.write(f"Đáp án đúng: {q['correct']}")
+                        st.write(f"Giải thích: {q['explain']}")
 # ========================
 # TAB 4: PHÒNG THÍ NGHIỆM AI
 # ========================
