@@ -1,7 +1,6 @@
 import os
 import re
 import io
-import base64
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -212,13 +211,11 @@ else:
 # ========================
 st.markdown("""
 <div class="main-title-wrap">
-    <center>
     <div class="main-title">🔬 Gia sư Vật lí AI – Hỗ trợ học tập và thí nghiệm Vật lí thông minh</div>
     <div class="main-subtitle">
         Hệ thống học tập Vật lí THPT tích hợp hỏi đáp AI, giải bài, trắc nghiệm, phòng thí nghiệm thông minh,
         mô phỏng, xử lí số liệu và viết báo cáo thí nghiệm tự động.
     </div>
-    </center>
 </div>
 """, unsafe_allow_html=True)
 
@@ -285,16 +282,22 @@ def render_metric_row(items):
 
 def create_basic_plot(x, y, xlabel, ylabel, title, mode="scatter", return_fig=False):
     fig, ax = plt.subplots(figsize=(7, 4))
+
     if mode == "line":
-        ax.plot(x, y, marker="o")
+        ax.plot(x, y, linewidth=2.5)
+    elif mode == "line_with_marker":
+        ax.plot(x, y, marker="o", markersize=4, linewidth=2)
     else:
-        ax.scatter(x, y)
+        ax.scatter(x, y, s=35)
+
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.grid(alpha=0.3)
+
     if return_fig:
         return fig
+
     st.pyplot(fig)
     plt.close(fig)
 
@@ -302,8 +305,8 @@ def create_regression_plot(x, y, xlabel, ylabel, title, return_fig=False):
     slope, intercept, r, _, _ = linregress(x, y)
 
     fig, ax = plt.subplots(figsize=(7, 4))
-    ax.scatter(x, y, label="Dữ liệu đo")
-    ax.plot(x, slope * x + intercept, label="Đường hồi quy")
+    ax.scatter(x, y, s=35, label="Dữ liệu đo")
+    ax.plot(x, slope * x + intercept, linewidth=2.5, label="Đường hồi quy")
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
@@ -361,43 +364,43 @@ def make_report_plot_figure(lab_data):
 
     if exp_type == "ohm":
         slope, intercept, _, _, _ = linregress(x, y)
-        ax.scatter(x, y, label="Dữ liệu đo")
-        ax.plot(x, slope * x + intercept, label="Đường hồi quy")
+        ax.scatter(x, y, s=35, label="Dữ liệu đo")
+        ax.plot(x, slope * x + intercept, linewidth=2.5, label="Đường hồi quy")
         ax.set_title("Đồ thị báo cáo: I - U")
         ax.legend()
 
     elif exp_type == "freefall":
-        ax.scatter(x, y, label="Dữ liệu đo")
+        ax.scatter(x, y, s=35, label="Dữ liệu đo")
         ax.set_title("Đồ thị báo cáo: s - t")
         ax.legend()
 
     elif exp_type == "pendulum":
         T2 = y ** 2
         slope, intercept, _, _, _ = linregress(x, T2)
-        ax.scatter(x, T2, label="Dữ liệu đo")
-        ax.plot(x, slope * x + intercept, label="Đường hồi quy")
+        ax.scatter(x, T2, s=35, label="Dữ liệu đo")
+        ax.plot(x, slope * x + intercept, linewidth=2.5, label="Đường hồi quy")
         ax.set_ylabel("T² (s²)")
         ax.set_title("Đồ thị báo cáo: T² - l")
         ax.legend()
 
     elif exp_type in ["speed", "force", "magnetic_B"]:
         slope, intercept, _, _, _ = linregress(x, y)
-        ax.scatter(x, y, label="Dữ liệu đo")
-        ax.plot(x, slope * x + intercept, label="Đường hồi quy")
+        ax.scatter(x, y, s=35, label="Dữ liệu đo")
+        ax.plot(x, slope * x + intercept, linewidth=2.5, label="Đường hồi quy")
         ax.set_title(f"Đồ thị báo cáo: {exp_name}")
         ax.legend()
 
     elif exp_type in ["sound_freq", "sound_speed", "measurement_error"]:
-        ax.plot(x, y, marker="o")
+        ax.plot(x, y, marker="o", markersize=4, linewidth=2)
         ax.set_title(f"Đồ thị báo cáo: {exp_name}")
 
     elif exp_type == "boyle":
-        ax.scatter(x, y, label="Dữ liệu đo")
+        ax.scatter(x, y, s=35, label="Dữ liệu đo")
         ax.set_title("Đồ thị báo cáo: p - V")
         ax.legend()
 
     else:
-        ax.scatter(x, y)
+        ax.scatter(x, y, s=35)
         ax.set_title(f"Đồ thị báo cáo: {exp_name}")
 
     ax.set_xlabel(x_name if exp_type != "pendulum" else "l (m)")
@@ -436,7 +439,7 @@ Hãy trả lời theo cấu trúc:
 Bạn là gia sư Vật lí AI.
 Trình bày rõ ràng, dễ hiểu, phù hợp học sinh THPT.
 Nếu có công thức, dùng $...$ hoặc $$...$$.
-Không dùng \( \) hoặc \[ \].
+Không dùng \\( \\) hoặc \\[ \\].
 """
         },
         {"role": "user", "content": prompt}
@@ -634,7 +637,10 @@ EXPERIMENTS = {
 # ========================
 colA, colB, colC, colD = st.columns(4)
 with colA:
-    st.markdown('<div class="stat-card"><div class="stat-label">Số thí nghiệm hỗ trợ</div><div class="stat-value">10</div></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="stat-card"><div class="stat-label">Số thí nghiệm hỗ trợ</div><div class="stat-value">{len(EXPERIMENTS)}</div></div>',
+        unsafe_allow_html=True
+    )
 with colB:
     st.markdown('<div class="stat-card"><div class="stat-label">Chế độ thí nghiệm</div><div class="stat-value">4</div></div>', unsafe_allow_html=True)
 with colC:
@@ -674,7 +680,7 @@ with tabs[0]:
 Bạn là gia sư vật lí.
 Nếu có công thức:
 - Viết dạng $...$
-- Không dùng \( \) hoặc \[ \]
+- Không dùng \\( \\) hoặc \\[ \\]
 - Giải thích rõ ràng, ngắn gọn, dễ hiểu
 """
                 },
@@ -715,7 +721,7 @@ Bạn là gia sư vật lí chuyên nghiệp.
 Quy tắc trình bày công thức:
 - Dùng $...$ cho công thức cùng dòng
 - Dùng $$...$$ cho công thức xuống dòng
-- Không dùng \( \) hoặc \[ \]
+- Không dùng \\( \\) hoặc \\[ \\]
 - Trình bày từng bước rõ ràng
 """
             },
@@ -913,6 +919,7 @@ with tabs[3]:
     if mode == "Thí nghiệm thực":
         st.markdown("### 🧪 Nhập dữ liệu đo thực tế")
         col1, col2 = st.columns(2)
+
         with col1:
             x_input = st.text_area(
                 f"Dữ liệu {exp['x_name']}",
@@ -996,13 +1003,13 @@ with tabs[3]:
                         extra_result += f"Sai lệch trung bình giữa giá trị lí thuyết và thực nghiệm ≈ {mean_diff:.5f} N\n"
 
                     elif exp["type"] == "sound_freq":
-                        create_basic_plot(x, y, "Lần đo", "f (Hz)", "Kết quả đo tần số sóng âm", mode="line")
+                        create_basic_plot(x, y, "Lần đo", "f (Hz)", "Kết quả đo tần số sóng âm", mode="line_with_marker")
                         f_avg = safe_mean(y)
                         st.write(f"**Tần số trung bình:** $f \\approx {f_avg:.5f}\\ Hz$")
                         extra_result += f"Tần số trung bình f ≈ {f_avg:.5f} Hz\n"
 
                     elif exp["type"] == "sound_speed":
-                        create_basic_plot(x, y, "Lần đo", "v (m/s)", "Kết quả đo tốc độ truyền âm", mode="line")
+                        create_basic_plot(x, y, "Lần đo", "v (m/s)", "Kết quả đo tốc độ truyền âm", mode="line_with_marker")
                         v_avg = safe_mean(y)
                         st.write(f"**Tốc độ truyền âm trung bình:** $v \\approx {v_avg:.5f}\\ m/s$")
                         extra_result += f"Tốc độ truyền âm trung bình v ≈ {v_avg:.5f} m/s\n"
@@ -1037,7 +1044,7 @@ with tabs[3]:
                             extra_result += f"Cảm ứng từ ước lượng B ≈ {B_est:.5f} T\n"
 
                     elif exp["type"] == "measurement_error":
-                        create_basic_plot(x, y, "Lần đo", "Giá trị đo", "Kết quả các lần đo", mode="line")
+                        create_basic_plot(x, y, "Lần đo", "Giá trị đo", "Kết quả các lần đo", mode="line_with_marker")
                         x_avg = safe_mean(y)
                         delta_abs = safe_mean(np.abs(y - x_avg))
                         delta_rel = (delta_abs / abs(x_avg) * 100) if x_avg != 0 else 0
@@ -1076,7 +1083,7 @@ with tabs[3]:
         if exp["type"] == "ohm":
             R = st.slider("Điện trở R (Ω)", 1.0, 100.0, 10.0)
             U_max = st.slider("Điện áp lớn nhất Umax (V)", 1.0, 24.0, 12.0)
-            U = np.linspace(0, U_max, 100)
+            U = np.linspace(0, U_max, 50)
             I = U / R
             create_basic_plot(U, I, "U (V)", "I (A)", "Mô phỏng định luật Ohm", mode="line")
             st.write(f"Khi $R = {R:.2f}\\ \\Omega$ thì $I = U/R$.")
@@ -1084,7 +1091,7 @@ with tabs[3]:
         elif exp["type"] == "freefall":
             g = st.slider("Gia tốc g (m/s²)", 1.0, 20.0, 9.8)
             t_max = st.slider("Thời gian quan sát (s)", 1.0, 10.0, 5.0)
-            t = np.linspace(0, t_max, 200)
+            t = np.linspace(0, t_max, 60)
             s = 0.5 * g * t**2
             create_basic_plot(t, s, "t (s)", "s (m)", "Mô phỏng rơi tự do", mode="line")
 
@@ -1092,7 +1099,7 @@ with tabs[3]:
             l = st.slider("Chiều dài dây l (m)", 0.1, 2.0, 1.0)
             g = st.slider("Gia tốc trọng trường g (m/s²)", 1.0, 20.0, 9.8)
             T = 2 * np.pi * np.sqrt(l / g)
-            t = np.linspace(0, 2 * T, 400)
+            t = np.linspace(0, 2 * T, 120)
             x_sim = np.cos(2 * np.pi * t / T)
             create_basic_plot(t, x_sim, "t (s)", "Li độ chuẩn hóa", "Mô phỏng con lắc đơn", mode="line")
             st.write(f"Chu kỳ dao động: $T = {T:.5f}\\ s$")
@@ -1100,20 +1107,20 @@ with tabs[3]:
         elif exp["type"] == "speed":
             v = st.slider("Tốc độ v (m/s)", 0.1, 10.0, 1.5)
             t_max = st.slider("Thời gian tối đa (s)", 1.0, 20.0, 10.0)
-            t = np.linspace(0, t_max, 100)
+            t = np.linspace(0, t_max, 50)
             s = v * t
             create_basic_plot(t, s, "t (s)", "s (m)", "Mô phỏng chuyển động đều", mode="line")
 
         elif exp["type"] == "boyle":
             k = st.slider("Hằng số k = pV", 1.0, 30.0, 10.0)
-            V = np.linspace(0.5, 10, 100)
+            V = np.linspace(0.5, 10, 60)
             p = k / V
             create_basic_plot(V, p, "V", "p", "Mô phỏng định luật Boyle", mode="line")
 
         elif exp["type"] == "magnetic_B":
             B = st.slider("Cảm ứng từ B (T)", 0.01, 2.0, 0.2)
             L = st.slider("Chiều dài dây L (m)", 0.05, 2.0, 0.5)
-            I = np.linspace(0, 10, 100)
+            I = np.linspace(0, 10, 60)
             F = B * I * L
             create_basic_plot(I, F, "I (A)", "F (N)", "Mô phỏng lực từ F = BIL", mode="line")
 
@@ -1121,13 +1128,13 @@ with tabs[3]:
             f0 = st.slider("Tần số chuẩn (Hz)", 100, 1000, 440)
             n = np.arange(1, 11)
             simulated = f0 + np.random.normal(0, 1.5, size=len(n))
-            create_basic_plot(n, simulated, "Lần đo", "f (Hz)", "Mô phỏng đo tần số sóng âm", mode="line")
+            create_basic_plot(n, simulated, "Lần đo", "f (Hz)", "Mô phỏng đo tần số sóng âm", mode="line_with_marker")
 
         elif exp["type"] == "sound_speed":
             v0 = st.slider("Tốc độ âm chuẩn (m/s)", 300, 360, 340)
             n = np.arange(1, 11)
             simulated = v0 + np.random.normal(0, 2.0, size=len(n))
-            create_basic_plot(n, simulated, "Lần đo", "v (m/s)", "Mô phỏng đo tốc độ truyền âm", mode="line")
+            create_basic_plot(n, simulated, "Lần đo", "v (m/s)", "Mô phỏng đo tốc độ truyền âm", mode="line_with_marker")
 
         elif exp["type"] == "force":
             F_theory = np.linspace(0.5, 5, 20)
@@ -1145,7 +1152,7 @@ with tabs[3]:
             spread = st.slider("Mức dao động dữ liệu", 0.01, 5.0, 0.2)
             n = np.arange(1, 11)
             measured = true_value + np.random.normal(0, spread, size=len(n))
-            create_basic_plot(n, measured, "Lần đo", "Giá trị đo", "Mô phỏng sai số phép đo", mode="line")
+            create_basic_plot(n, measured, "Lần đo", "Giá trị đo", "Mô phỏng sai số phép đo", mode="line_with_marker")
 
         else:
             st.info("Mô phỏng cho thí nghiệm này sẽ tiếp tục được mở rộng.")
@@ -1200,7 +1207,7 @@ with tabs[3]:
                 with c1:
                     st.markdown(f'<span class="small-chip">Tên thí nghiệm: {lab["experiment"]}</span>', unsafe_allow_html=True)
                 with c2:
-                    st.markdown(f'<span class="small-chip">Trạng thái: Đã phân tích</span>', unsafe_allow_html=True)
+                    st.markdown('<span class="small-chip">Trạng thái: Đã phân tích</span>', unsafe_allow_html=True)
                 with c3:
                     has_data = "Có dữ liệu số" if lab.get("x_data") is not None else "Chỉ có mô tả"
                     st.markdown(f'<span class="small-chip">{has_data}</span>', unsafe_allow_html=True)
